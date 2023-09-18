@@ -1,5 +1,6 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use std::io;
+
 pub fn general_route(cfg: &mut web::ServiceConfig) {
     cfg.route("/health", web::get().to(health_check_handler));
 }
