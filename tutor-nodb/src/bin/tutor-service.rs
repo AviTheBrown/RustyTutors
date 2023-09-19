@@ -18,7 +18,7 @@ use state::AppState;
 async fn main() -> io::Result<()> {
     // data that will shared across threads
     let shared_data = web::Data::new(AppState {
-        health_check_response: "All is good in the hood".to_string(),
+        health_check_response: "".to_string(),
         visit_count: Mutex::new(0),
         courses: Mutex::new(vec![]),
     });
@@ -26,7 +26,7 @@ async fn main() -> io::Result<()> {
     let app = move || {
         App::new()
             .app_data(shared_data.clone())
-            .configure(health_route)
+            .configure(general_routes)
     };
     HttpServer::new(app).bind("127.0.0.1:3000")?.run().await
 }
