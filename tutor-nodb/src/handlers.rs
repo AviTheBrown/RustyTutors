@@ -1,11 +1,49 @@
 use super::models::Course;
 use super::state::AppState;
 use actix_web::{
-    web::{self, Json},
+    web::{self},
     HttpResponse,
 };
 use chrono::Utc;
+pub async fn get_course_details(
+    app_state: web::Data<AppState>,
+    params: web::Path<(i32, i32)>,
+) -> HttpResponse {
+    let (tutor_id, course_id) = params.as_ref().to_owned();
+    let selected_course = app_state
+        .courses
+        .lock()
+        .unwrap()
+        .clone()
+        .into_iter()
+        .filter(|x| x.tutor_id == tutor_id && x.course_id == Some(course_id))
+        .collect::<Vec<_>>();
 
+    if let Some(course) = selected_course.first() {
+        HttpResponse::Ok().json(course)
+    } else {
+        HttpResponse::Ok().json("Course not found".to_string())
+    }
+}
+pub async fn get_course_for_tutor(
+    app_state: web::Data<AppState>,
+    params: web::Path<i32>,
+) -> HttpResponse {
+    let tutor_id: i32 = params.as_ref().to_owned();
+    let filtered_courses = app_state
+        .courses
+        .lock()
+        .unwrap()
+        .clone()
+        .into_iter()
+        .filter(|course| course.tutor_id == tutor_id)
+        .collect::<Vec<Course>>();
+    if !filtered_courses.is_empty() {
+        HttpResponse::Ok().json(filtered_courses)
+    } else {
+        HttpResponse::Ok().json("No courses found for tutor".to_string())
+    }
+}
 pub async fn new_course(
     new_course: web::Json<Course>,
     app_state: web::Data<AppState>,
@@ -64,5 +102,17 @@ mod test {
         });
         let resp: HttpResponse = new_course(course, app_state).await;
         assert_eq!(resp.status(), StatusCode::OK);
+    }
+    #[actix_rt::test]
+    async fn get_all_courses_sucess() {
+        let app_state: web::Data<AppState> = web::Data::new(AppState {
+            health_check_response: "".to_string(),
+            visit_count: Mutex::new(0),
+            courses: Mutex::new(vec![]),
+        });
+        // replicating path param /courses/{tutor_id}
+        let tutor_id: web::Path<i32> = web::Path::from(1);
+        let res: HttpResponse = get_course_for_tutor(app_state, tutor_id).await;
+        assert_eq!(res.status(), StatusCode::OK);
     }
 }
