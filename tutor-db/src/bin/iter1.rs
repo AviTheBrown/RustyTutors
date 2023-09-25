@@ -22,7 +22,7 @@ async fn main() -> io::Result<()> {
     let course_rows = sqlx::query!(
         r#"select course_id, tutor_id, course_id, posted_time
            from ezy_course_c4 where course_id = $1"#,
-        1
+        1,
     )
     .fetch_all(&database_pool)
     .await
