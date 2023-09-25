@@ -1,6 +1,6 @@
 
 /* Drop table if it already exists*/
-DROP TABLE IF EXIST ezy_course_c4;
+DROP TABLE IF EXISTS ezy_course_c4;
 /* Create a table. */
 /* Note: Don't put a comma after last field */
 CREATE TABLE ezy_course_c4
