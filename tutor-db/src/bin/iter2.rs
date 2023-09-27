@@ -25,7 +25,7 @@ use state::AppState;
 #[actix_web::main]
 
 async fn main() -> io::Result<()> {
-    const SERVER: String = "127.0.0.1:3000".to_string();
+    let server_addr: &str = "127.0.0.1:3000";
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL was not located in .env file");
@@ -42,5 +42,6 @@ async fn main() -> io::Result<()> {
             .configure(general_routes)
             .configure(course_routes)
     };
-    HttpServer::new(app).bind(SERVER)?.run().await
+    println!("Server connected");
+    HttpServer::new(app).bind(server_addr)?.run().await
 }

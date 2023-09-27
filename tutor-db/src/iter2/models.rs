@@ -13,7 +13,7 @@ impl From<web::Json<Course>> for Course {
     fn from(course: web::Json<Course>) -> Self {
         Course {
             course_id: course.course_id,
-            course_name: course.course_name,
+            course_name: course.course_name.clone(),
             tutor_id: course.tutor_id,
             posted_time: course.posted_time,
         }
