@@ -2,6 +2,7 @@ use actix_web::web;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Course {
     pub course_id: u32,
     pub course_name: String,
