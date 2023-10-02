@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Course {
-    course_name: String,
-    course_id: u32,
-    tutor_id: u32,
-    posted_time: Option<NaiveDateTime>,
+    pub course_name: String,
+    pub course_id: i32,
+    pub tutor_id: i32,
+    pub posted_time: Option<NaiveDateTime>,
 }
 
 impl From<web::Json<Course>> for Course {
