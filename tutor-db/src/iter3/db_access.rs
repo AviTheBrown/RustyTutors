@@ -3,8 +3,9 @@ use sqlx::postgres::PgPool;
 
 pub async fn get_course_for_tutor_db(pool: &PgPool, tutor_id: i32) -> Vec<Course> {
     let course_row_qry = sqlx::query!(
-        "SELECT tutor_id, course_id, course_name, posted_time FROM
-		ezy_course_c4 WHERE tutor_id = $1",
+        "SELECT tutor_id, course_id, course_name, posted_time 
+        FROM ezy_course_c4 
+        WHERE tutor_id = $1",
         tutor_id
     )
     .fetch_all(pool)
@@ -21,8 +22,8 @@ pub async fn get_course_for_tutor_db(pool: &PgPool, tutor_id: i32) -> Vec<Course
         })
         .collect()
 }
-pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32) -> Option<Course> {
-    match sqlx::query!(
+pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32) -> Course {
+    let course_row_qry = sqlx::query!(
         "SELECT tutor_id, course_id, course_name, posted_time 
          FROM ezy_course_c4
          WHERE tutor_id = $1 AND course_id = $2",
@@ -31,18 +32,19 @@ pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32)
     )
     .fetch_one(pool)
     .await
-    {
-        Ok(course) => Some(Course {
-            course_name: course.course_name.clone(),
-            course_id: course.course_id,
-            tutor_id: course.tutor_id,
-            posted_time: Some(chrono::NaiveDateTime::from(course.posted_time.unwrap())),
-        }),
-        Err(_) => None,
+    .unwrap();
+
+    Course {
+        course_name: course_row_qry.course_name.clone(),
+        course_id: course_row_qry.course_id,
+        tutor_id: course_row_qry.tutor_id,
+        posted_time: Some(chrono::NaiveDateTime::from(
+            course_row_qry.posted_time.unwrap(),
+        )),
     }
 }
-pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Option<Course> {
-    match sqlx::query!(
+pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Course {
+    let course_row_qry = sqlx::query!(
         "INSERT INTO ezy_course_c4 (course_id, tutor_id, course_name) VALUES ($1, $2, $3)  
         RETURNING tutor_id, course_id, course_name, posted_time",
         new_course.course_id,
@@ -51,13 +53,14 @@ pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Option<Cou
     )
     .fetch_one(pool)
     .await
-    {
-        Ok(course) => Some(Course {
-            course_name: course.course_name.clone(),
-            course_id: course.course_id,
-            tutor_id: course.tutor_id,
-            posted_time: Some(chrono::NaiveDateTime::from(course.posted_time.unwrap())),
-        }),
-        Err(_) => None,
+    .unwrap();
+
+    Course {
+        course_name: course_row_qry.course_name.clone(),
+        course_id: course_row_qry.course_id,
+        tutor_id: course_row_qry.tutor_id,
+        posted_time: Some(chrono::NaiveDateTime::from(
+            course_row_qry.posted_time.unwrap(),
+        )),
     }
 }
