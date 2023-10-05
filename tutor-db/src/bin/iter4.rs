@@ -1,28 +1,26 @@
-use actix_web::dev::Service;
-use actix_web::http::StatusCode;
-use actix_web::HttpResponse;
-// use actix_web::web:
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
-use sqlx::database;
 use sqlx::postgres::PgPool;
 use std::env;
 use std::io;
 use std::sync::Mutex;
 
-#[path = "../iter3/handlers.rs"]
+#[path = "../iter4/errors.rs"]
+mod errors;
+
+#[path = "../iter4/handlers.rs"]
 mod handlers;
 
-#[path = "../iter3/routes.rs"]
+#[path = "../iter4/routes.rs"]
 mod routes;
 
-#[path = "../iter3/models.rs"]
+#[path = "../iter4/models.rs"]
 mod models;
 
-#[path = "../iter3/db_access.rs"]
+#[path = "../iter4/db_access.rs"]
 mod db;
 
-#[path = "../iter3/state.rs"]
+#[path = "../iter4/state.rs"]
 mod state;
 
 use routes::*;
@@ -50,5 +48,6 @@ async fn main() -> io::Result<()> {
             .configure(course_routes)
     };
     println!("server connected and running");
-    HttpServer::new(app).bind("127.0.0.1:3000")?.run().await
+    let host_port = env::var("HOST_PORT").expect("HOST_PORT IS NOT FOUND IN THE .env FILE");
+    HttpServer::new(app).bind(&host_port)?.run().await
 }
