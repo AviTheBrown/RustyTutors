@@ -1,4 +1,5 @@
 use super::db::*;
+use super::errors::TutorError;
 use super::models::Course;
 use super::state::AppState;
 use actix_web::{web, HttpResponse};
@@ -33,12 +34,13 @@ pub async fn get_course_details(
 pub async fn get_courses_for_tutor(
     app_state: web::Data<AppState>,
     params: web::Path<i32>,
-) -> HttpResponse {
+) -> Result<HttpResponse, TutorError> {
     let tuple: i32 = params.into_inner();
     let tutor_id: i32 = i32::try_from(tuple).unwrap();
 
-    let courses = get_course_for_tutor_db(&app_state.db, tutor_id).await;
-    HttpResponse::Ok().json(courses)
+    get_course_for_tutor_db(&app_state.db, tutor_id)
+        .await
+        .map(|course| HttpResponse::Ok().json(course))
 }
 
 #[cfg(test)]
@@ -82,7 +84,7 @@ mod test {
         });
         let tutor_id: web::Path<i32> = web::Path::from(1);
         let resp = get_courses_for_tutor(app_state, tutor_id).await;
-        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(resp.unwrap().status(), StatusCode::OK);
     }
 
     // #[actix_rt::test]

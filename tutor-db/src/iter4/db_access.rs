@@ -1,7 +1,11 @@
+use super::errors::TutorError;
 use super::models::Course;
 use sqlx::postgres::PgPool;
 
-pub async fn get_course_for_tutor_db(pool: &PgPool, tutor_id: i32) -> Vec<Course> {
+pub async fn get_course_for_tutor_db(
+    pool: &PgPool,
+    tutor_id: i32,
+) -> Result<Vec<Course>, TutorError> {
     let course_row_qry = sqlx::query!(
         "SELECT tutor_id, course_id, course_name, posted_time 
         FROM ezy_course_c4 
@@ -9,10 +13,9 @@ pub async fn get_course_for_tutor_db(pool: &PgPool, tutor_id: i32) -> Vec<Course
         tutor_id
     )
     .fetch_all(pool)
-    .await
-    .unwrap();
+    .await?;
 
-    course_row_qry
+    let course: Vec<Course> = course_row_qry
         .iter()
         .map(|course_row| Course {
             course_name: course_row.course_name.clone(),
@@ -20,7 +23,11 @@ pub async fn get_course_for_tutor_db(pool: &PgPool, tutor_id: i32) -> Vec<Course
             tutor_id: course_row.tutor_id,
             posted_time: Some(chrono::NaiveDateTime::from(course_row.posted_time.unwrap())),
         })
-        .collect()
+        .collect();
+    match course.len() {
+        0 => Err(TutorError::NotFound("Course not found for tutor".into())),
+        _ => Ok(course),
+    }
 }
 pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32) -> Course {
     let course_row_qry = sqlx::query!(
