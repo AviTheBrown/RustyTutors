@@ -20,6 +20,11 @@ impl fmt::Display for TutorError {
         write!(f, "{}", self.error_response())
     }
 }
+impl From<SQLxError> for TutorError {
+    fn from(value: SQLxError) -> Self {
+        TutorError::DBError(value.to_string())
+    }
+}
 impl TutorError {
     fn error_response(&self) -> String {
         match self {
