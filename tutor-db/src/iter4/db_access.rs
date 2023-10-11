@@ -29,7 +29,11 @@ pub async fn get_course_for_tutor_db(
         _ => Ok(course),
     }
 }
-pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32) -> Course {
+pub async fn get_course_details_db(
+    pool: &PgPool,
+    tutor_id: i32,
+    course_id: i32,
+) -> Result<Course, TutorError> {
     let course_row_qry = sqlx::query!(
         "SELECT tutor_id, course_id, course_name, posted_time 
          FROM ezy_course_c4
@@ -38,19 +42,22 @@ pub async fn get_course_details_db(pool: &PgPool, tutor_id: i32, course_id: i32)
         course_id
     )
     .fetch_one(pool)
-    .await
-    .unwrap();
+    .await;
 
-    Course {
-        course_name: course_row_qry.course_name.clone(),
-        course_id: course_row_qry.course_id,
-        tutor_id: course_row_qry.tutor_id,
-        posted_time: Some(chrono::NaiveDateTime::from(
-            course_row_qry.posted_time.unwrap(),
-        )),
+    if let Ok(course_row_qry) = course_row_qry {
+        Ok(Course {
+            course_name: course_row_qry.course_name.clone(),
+            course_id: course_row_qry.course_id,
+            tutor_id: course_row_qry.tutor_id,
+            posted_time: Some(chrono::NaiveDateTime::from(
+                course_row_qry.posted_time.unwrap(),
+            )),
+        })
+    } else {
+        Err(TutorError::NotFound("Course Not Found".into()))
     }
 }
-pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Course {
+pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Result<Course, TutorError> {
     let course_row_qry = sqlx::query!(
         "INSERT INTO ezy_course_c4 (course_id, tutor_id, course_name) VALUES ($1, $2, $3)  
         RETURNING tutor_id, course_id, course_name, posted_time",
@@ -59,15 +66,14 @@ pub async fn post_new_course_db(pool: &PgPool, new_course: Course) -> Course {
         new_course.course_name
     )
     .fetch_one(pool)
-    .await
-    .unwrap();
+    .await?;
 
-    Course {
+    Ok(Course {
         course_name: course_row_qry.course_name.clone(),
         course_id: course_row_qry.course_id,
         tutor_id: course_row_qry.tutor_id,
         posted_time: Some(chrono::NaiveDateTime::from(
             course_row_qry.posted_time.unwrap(),
         )),
-    }
+    })
 }

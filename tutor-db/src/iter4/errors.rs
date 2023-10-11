@@ -16,13 +16,18 @@ pub struct ErrorMessage {
 }
 
 impl fmt::Display for TutorError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "{}", self.error_response())
     }
 }
+impl From<actix_web::error::Error> for TutorError {
+    fn from(err: actix_web::error::Error) -> Self {
+        TutorError::ActixServerError(err.to_string())
+    }
+}
 impl From<SQLxError> for TutorError {
-    fn from(value: SQLxError) -> Self {
-        TutorError::DBError(value.to_string())
+    fn from(err: SQLxError) -> Self {
+        TutorError::DBError(err.to_string())
     }
 }
 impl TutorError {
